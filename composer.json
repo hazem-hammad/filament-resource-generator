@@ -1,0 +1,42 @@
+{
+    "name": "intcore/filament-resource-generator",
+    "description": "A powerful Laravel Filament package for generating complete modules with models, migrations, factories, seeders, and admin resources",
+    "type": "library",
+    "keywords": ["laravel", "filament", "generator", "crud", "module", "admin"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Hazem Hamaad",
+            "email": "hazem.hamaad@intcore.com"
+        }
+    ],
+    "require": {
+        "php": "^8.1|^8.2|^8.3",
+        "laravel/framework": "^10.0|^11.0|^12.0",
+        "filament/filament": "^3.0",
+        "spatie/laravel-package-tools": "^1.13"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^8.0|^9.0",
+        "phpunit/phpunit": "^10.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Intcore\\FilamentResourceGenerator\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Intcore\\FilamentResourceGenerator\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Intcore\\FilamentResourceGenerator\\ModuleGeneratorServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
