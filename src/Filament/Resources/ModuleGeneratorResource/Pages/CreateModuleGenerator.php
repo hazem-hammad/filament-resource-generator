@@ -235,7 +235,7 @@ class CreateModuleGenerator extends CreateRecord
 
     protected function getRedirectUrl(): string
     {
-        return static::getResource()::getUrl('create');
+        return static::getResource()::getUrl('index');
     }
 
     protected function mutateFormDataBeforeCreate(array $data): array

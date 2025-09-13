@@ -630,13 +630,8 @@ class ModuleGeneratorResource extends Resource
     public static function getPages(): array
     {
         return [
-            'create' => Pages\CreateModuleGenerator::route('/create'),
+            'index' => Pages\CreateModuleGenerator::route('/'),
         ];
-    }
-
-    public static function getUrl(string $name = 'create', array $parameters = [], bool $isAbsolute = true, ?string $panel = null, ?\Illuminate\Database\Eloquent\Model $tenant = null): string
-    {
-        return static::getPages()[$name]::getUrl($parameters, $isAbsolute, $panel, $tenant);
     }
 
     public static function canCreate(): bool
