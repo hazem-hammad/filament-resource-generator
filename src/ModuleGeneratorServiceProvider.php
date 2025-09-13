@@ -4,11 +4,8 @@ namespace Intcore\FilamentResourceGenerator;
 
 use Filament\Support\Assets\Asset;
 use Filament\Support\Facades\FilamentAsset;
-use Filament\Facades\Filament;
 use Intcore\FilamentResourceGenerator\Commands\InstallModuleGeneratorCommand;
-use Intcore\FilamentResourceGenerator\Filament\Resources\ModuleGeneratorResource;
 use Illuminate\Filesystem\Filesystem;
-use Livewire\Features\SupportTesting\Testable;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -68,15 +65,7 @@ class ModuleGeneratorServiceProvider extends PackageServiceProvider
             $this->getAssetPackageName()
         );
 
-        // Register the page with Filament
-        Filament::serving(function () {
-            $panel = Filament::getCurrentPanel();
-            if ($panel) {
-                $panel->pages([
-                    \Intcore\FilamentResourceGenerator\Filament\Pages\ModuleGenerator::class,
-                ]);
-            }
-        });
+        // Resource registration is handled in the AdminPanelProvider for better compatibility
 
         // Handle Stubs
         if (app()->runningInConsole()) {
