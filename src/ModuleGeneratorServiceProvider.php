@@ -70,9 +70,12 @@ class ModuleGeneratorServiceProvider extends PackageServiceProvider
 
         // Register the resource with Filament
         Filament::serving(function () {
-            Filament::getCurrentPanel()?->resources([
-                ModuleGeneratorResource::class,
-            ]);
+            $panel = Filament::getCurrentPanel();
+            if ($panel) {
+                $panel->pages([
+                    \Intcore\FilamentResourceGenerator\Filament\Pages\ModuleGenerator::class,
+                ]);
+            }
         });
 
         // Handle Stubs
