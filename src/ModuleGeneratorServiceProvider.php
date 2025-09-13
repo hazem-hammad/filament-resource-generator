@@ -68,10 +68,13 @@ class ModuleGeneratorServiceProvider extends PackageServiceProvider
 
         // Handle Stubs
         if (app()->runningInConsole()) {
-            foreach (app(Filesystem::class)->files(__DIR__ . '/../stubs/') as $file) {
-                $this->publishes([
-                    $file->getRealPath() => base_path("stubs/filament-resource-generator/{$file->getFilename()}"),
-                ], 'filament-resource-generator-stubs');
+            $stubsPath = __DIR__ . '/../stubs/';
+            if (is_dir($stubsPath)) {
+                foreach (app(Filesystem::class)->files($stubsPath) as $file) {
+                    $this->publishes([
+                        $file->getRealPath() => base_path("stubs/filament-resource-generator/{$file->getFilename()}"),
+                    ], 'filament-resource-generator-stubs');
+                }
             }
         }
     }
