@@ -4,7 +4,9 @@ namespace Intcore\FilamentResourceGenerator;
 
 use Filament\Support\Assets\Asset;
 use Filament\Support\Facades\FilamentAsset;
+use Filament\Facades\Filament;
 use Intcore\FilamentResourceGenerator\Commands\InstallModuleGeneratorCommand;
+use Intcore\FilamentResourceGenerator\Filament\Resources\ModuleGeneratorResource;
 use Illuminate\Filesystem\Filesystem;
 use Livewire\Features\SupportTesting\Testable;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
@@ -65,6 +67,13 @@ class ModuleGeneratorServiceProvider extends PackageServiceProvider
             $this->getScriptData(),
             $this->getAssetPackageName()
         );
+
+        // Register the resource with Filament
+        Filament::serving(function () {
+            Filament::getCurrentPanel()?->resources([
+                ModuleGeneratorResource::class,
+            ]);
+        });
 
         // Handle Stubs
         if (app()->runningInConsole()) {
