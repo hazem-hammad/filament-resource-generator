@@ -1,7 +1,7 @@
 # Filament Resource Generator
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/hazem/filament-resource-generator.svg?style=flat-square)](https://packagist.org/packages/hazem/filament-resource-generator)
-[![Total Downloads](https://img.shields.io/packagist/dt/hazem/filament-resource-generator.svg?style=flat-square)](https://packagist.org/packages/hazem/filament-resource-generator)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/intcore/filament-resource-generator.svg?style=flat-square)](https://packagist.org/packages/intcore/filament-resource-generator)
+[![Total Downloads](https://img.shields.io/packagist/dt/intcore/filament-resource-generator.svg?style=flat-square)](https://packagist.org/packages/intcore/filament-resource-generator)
 
 A powerful Laravel Filament package for generating complete modules with models, migrations, factories, seeders, and admin resources through an intuitive web interface.
 
@@ -21,7 +21,7 @@ A powerful Laravel Filament package for generating complete modules with models,
 You can install the package via Composer:
 
 ```bash
-composer require intcore/filament-resource-generator
+composer require intcore/filament-resource-generator:^1.0
 ```
 
 You can publish and run the migrations with:
