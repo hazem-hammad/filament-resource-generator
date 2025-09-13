@@ -634,9 +634,9 @@ class ModuleGeneratorResource extends Resource
         ];
     }
 
-    public static function getUrl(string $name = 'create', array $parameters = []): string
+    public static function getUrl(string $name = 'create', array $parameters = [], bool $isAbsolute = true, ?string $panel = null, ?\Illuminate\Database\Eloquent\Model $tenant = null): string
     {
-        return static::getPages()[$name]::getUrl($parameters);
+        return static::getPages()[$name]::getUrl($parameters, $isAbsolute, $panel, $tenant);
     }
 
     public static function canCreate(): bool
