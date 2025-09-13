@@ -31,14 +31,14 @@ If the Module Generator doesn't appear automatically in your Filament admin pane
 ```php
 // app/Providers/Filament/AdminPanelProvider.php
 
-use Intcore\FilamentResourceGenerator\Filament\Pages\ModuleGenerator;
+use Intcore\FilamentResourceGenerator\Filament\Resources\ModuleGeneratorResource;
 
 public function panel(Panel $panel): Panel
 {
     return $panel
         // ... other configuration
-        ->pages([
-            ModuleGenerator::class,
+        ->resources([
+            ModuleGeneratorResource::class,
         ]);
 }
 ```
