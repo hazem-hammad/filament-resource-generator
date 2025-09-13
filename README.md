@@ -24,11 +24,23 @@ You can install the package via Composer:
 composer require intcore/filament-resource-generator:^1.0
 ```
 
-You can publish and run the migrations with:
+### Manual Registration (Optional)
 
-```bash
-php artisan vendor:publish --tag="filament-resource-generator-migrations"
-php artisan migrate
+If the Module Generator doesn't appear automatically in your Filament admin panel, you can manually register it in your `AdminPanelProvider`:
+
+```php
+// app/Providers/Filament/AdminPanelProvider.php
+
+use Intcore\FilamentResourceGenerator\Filament\Pages\ModuleGenerator;
+
+public function panel(Panel $panel): Panel
+{
+    return $panel
+        // ... other configuration
+        ->pages([
+            ModuleGenerator::class,
+        ]);
+}
 ```
 
 You can publish the config file with:
