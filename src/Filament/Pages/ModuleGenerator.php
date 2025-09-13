@@ -20,9 +20,11 @@ class ModuleGenerator extends Page
 
     protected static ?string $navigationLabel = 'Module Generator';
 
-    protected static string $view = 'filament-resource-generator::module-generator';
+    protected static string $view = 'filament-resource-generator::pages.module-generator';
 
     protected static ?int $navigationSort = 1;
+
+    protected static string $routePath = '/module-generator';
 
     public ?array $data = [];
 

@@ -68,7 +68,7 @@ class ModuleGeneratorServiceProvider extends PackageServiceProvider
             $this->getAssetPackageName()
         );
 
-        // Register the resource with Filament
+        // Register the page with Filament
         Filament::serving(function () {
             $panel = Filament::getCurrentPanel();
             if ($panel) {
