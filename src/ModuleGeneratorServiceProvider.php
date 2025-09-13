@@ -28,7 +28,7 @@ class ModuleGeneratorServiceProvider extends PackageServiceProvider
                     ->publishConfigFile()
                     ->publishMigrations()
                     ->askToRunMigrations()
-                    ->askToStarRepoOnGitHub('hazem/filament-resource-generator');
+                    ->askToStarRepoOnGitHub('intcore/filament-resource-generator');
             });
 
         $configFileName = $package->shortName();
@@ -93,7 +93,7 @@ class ModuleGeneratorServiceProvider extends PackageServiceProvider
 
     protected function getAssetPackageName(): ?string
     {
-        return 'hazem/filament-resource-generator';
+        return 'intcore/filament-resource-generator';
     }
 
     /**
