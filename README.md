@@ -7,21 +7,21 @@ A powerful Laravel Filament package for generating complete modules with models,
 
 ## Features
 
--   🚀 **Complete Module Generation**: Generate models, migrations, factories, seeders, and Filament resources
--   🎯 **Intuitive Web Interface**: User-friendly wizard-based form in Filament admin
--   🔗 **Smart Relationships**: Automatic foreign key detection and relationship configuration
--   📊 **Table Introspection**: Intelligent dropdown selection for existing models and columns
--   🎨 **Customizable Forms**: Multiple input types (text, textarea, select, toggle, date pickers, etc.)
--   📝 **Auto-population**: Smart defaults based on column types and naming conventions
--   🏃‍♂️ **Auto Execution**: Optional automatic migration and seeder execution
--   🧪 **Factory Integration**: Automatic factory generation with seeder dependencies
+- 🚀 **Complete Module Generation**: Generate models, migrations, factories, seeders, and Filament resources
+- 🎯 **Intuitive Web Interface**: User-friendly wizard-based form in Filament admin
+- 🔗 **Smart Relationships**: Automatic foreign key detection and relationship configuration
+- 📊 **Table Introspection**: Intelligent dropdown selection for existing models and columns
+- 🎨 **Customizable Forms**: Multiple input types (text, textarea, select, toggle, date pickers, etc.)
+- 📝 **Auto-population**: Smart defaults based on column types and naming conventions
+- 🏃‍♂️ **Auto Execution**: Optional automatic migration and seeder execution
+- 🧪 **Factory Integration**: Automatic factory generation with seeder dependencies
 
 ## Installation
 
 You can install the package via Composer:
 
 ```bash
-composer require intcore/filament-resource-generator:^1.0
+composer require intcore/filament-resource-generator
 ```
 
 ### Plugin Registration
@@ -59,9 +59,9 @@ php artisan module-generator:install
 
 2. **Create a New Module**:
 
-    - Fill in the module information (name, description, etc.)
-    - Define your database schema (create new tables or use existing ones)
-    - Configure your Filament resource (forms, tables, pages, actions)
+   - Fill in the module information (name, description, etc.)
+   - Define your database schema (create new tables or use existing ones)
+   - Configure your Filament resource (forms, tables, pages, actions)
 
 3. **Generate**: Click generate and watch as your complete module is created with all necessary files.
 
@@ -69,34 +69,34 @@ php artisan module-generator:install
 
 1. **Module Information**:
 
-    - Module Name: `Post`
-    - Table Name: `posts`
-    - Description: `Blog post management`
+   - Module Name: `Post`
+   - Table Name: `posts`
+   - Description: `Blog post management`
 
 2. **Database Schema**:
 
-    - `title` (string, required)
-    - `content` (longText)
-    - `category_id` (foreignId → categories table)
-    - `is_published` (boolean)
-    - `published_at` (datetime, nullable)
+   - `title` (string, required)
+   - `content` (longText)
+   - `category_id` (foreignId → categories table)
+   - `is_published` (boolean)
+   - `published_at` (datetime, nullable)
 
 3. **Filament Configuration**:
-    - Form Fields: Auto-configured based on column types
-    - Table Columns: Smart relationship display (category.name instead of category_id)
-    - Pages: List, Create, Edit
-    - Actions: Edit, Delete, Bulk Delete
+   - Form Fields: Auto-configured based on column types
+   - Table Columns: Smart relationship display (category.name instead of category_id)
+   - Pages: List, Create, Edit
+   - Actions: Edit, Delete, Bulk Delete
 
 ## Generated Files
 
 The package generates:
 
--   **Model**: `app/Models/Post.php` with relationships and fillable fields
--   **Migration**: `database/migrations/create_posts_table.php`
--   **Factory**: `database/factories/PostFactory.php`
--   **Seeder**: `database/seeders/PostSeeder.php`
--   **Filament Resource**: `app/Filament/Resources/PostResource.php`
--   **Resource Pages**: Create, Edit, List pages
+- **Model**: `app/Models/Post.php` with relationships and fillable fields
+- **Migration**: `database/migrations/create_posts_table.php`
+- **Factory**: `database/factories/PostFactory.php`
+- **Seeder**: `database/seeders/PostSeeder.php`
+- **Filament Resource**: `app/Filament/Resources/PostResource.php`
+- **Resource Pages**: Create, Edit, List pages
 
 ## Configuration
 
@@ -121,10 +121,10 @@ return [
 
 The package intelligently handles foreign key relationships:
 
--   **Auto-detection**: `category_id` column automatically suggests `Category` model
--   **Dynamic Dropdowns**: Select from actual models and their database columns
--   **Smart Display**: Table columns show `category.name` instead of raw IDs
--   **Relationship Forms**: Foreign key fields become searchable select dropdowns with inline creation
+- **Auto-detection**: `category_id` column automatically suggests `Category` model
+- **Dynamic Dropdowns**: Select from actual models and their database columns
+- **Smart Display**: Table columns show `category.name` instead of raw IDs
+- **Relationship Forms**: Foreign key fields become searchable select dropdowns with inline creation
 
 ### Existing Table Support
 
@@ -139,17 +139,17 @@ You can build Filament resources for existing tables:
 
 Support for various Filament input types:
 
--   Text Input, Textarea, Rich Text Editor
--   Select, Toggle, Tags Input
--   Date Picker, DateTime Picker, Time Picker
--   File Upload, Color Picker
--   And more...
+- Text Input, Textarea, Rich Text Editor
+- Select, Toggle, Tags Input
+- Date Picker, DateTime Picker, Time Picker
+- File Upload, Color Picker
+- And more...
 
 ## Requirements
 
--   PHP 8.1+
--   Laravel 10.0+
--   Filament 3.0+
+- PHP 8.1+
+- Laravel 10.0+
+- Filament 3.0+
 
 ## Contributing
 
@@ -161,7 +161,7 @@ Please review [our security policy](../../security/policy) on how to report secu
 
 ## Credits
 
--   [Hazem Hamaad](http://github.com/hazem-hammad)
+- [Hazem Hamaad](http://github.com/hazem-hammad)
 
 ## License
 
