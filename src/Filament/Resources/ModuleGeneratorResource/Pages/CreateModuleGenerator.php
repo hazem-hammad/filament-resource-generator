@@ -19,42 +19,17 @@ class CreateModuleGenerator extends CreateRecord
 
     protected function getHeaderActions(): array
     {
-        return [
-            Actions\Action::make('preview')
-                ->label('Preview Generated Code')
-                ->icon('heroicon-o-eye')
-                ->color('gray')
-                ->action(function () {
-                    try {
-                        $data = $this->form->getState();
-                        $generator = new ModuleGeneratorService();
-                        $preview = $generator->previewModule($data);
-                        
-                        $this->dispatch('open-modal', id: 'preview-modal', content: $preview);
-                    } catch (\Filament\Forms\ValidationException $e) {
-                        // Re-throw validation errors to show them in the form
-                        throw $e;
-                    } catch (\Exception $e) {
-                        Notification::make()
-                            ->title('Preview Failed')
-                            ->body('Error: ' . $e->getMessage())
-                            ->danger()
-                            ->send();
-                    }
-                })
-                ->visible(function () {
-                    try {
-                        $data = $this->form->getRawState();
-                        return !empty($data['module_name']);
-                    } catch (\Exception $e) {
-                        return false;
-                    }
-                }),
+        return [];
+    }
 
+    protected function getFormActions(): array
+    {
+        return [
             Actions\Action::make('generate')
                 ->label('Generate Module')
                 ->icon('heroicon-o-cog-6-tooth')
                 ->color('success')
+                ->size(\Filament\Support\Enums\ActionSize::Large)
                 ->action(function () {
                     try {
                         $data = $this->form->getState();
@@ -114,23 +89,32 @@ class CreateModuleGenerator extends CreateRecord
                             }
                         }
                         
+                        // Build notification actions
+                        $notificationActions = [
+                            \Filament\Notifications\Actions\Action::make('view_files')
+                                ->label('View Generated Files')
+                                ->button()
+                                ->close()
+                        ];
+
+                        // Add action to refresh the page if Filament resource was generated
+                        if (($data['generate_filament_resource'] ?? false)) {
+                            $body .= "\n\n💡 Please refresh your browser or navigate to the admin panel to see the new resource.";
+                            
+                            $notificationActions[] = \Filament\Notifications\Actions\Action::make('refresh_page')
+                                ->label('Refresh Page')
+                                ->button()
+                                ->action(fn () => redirect()->refresh())
+                                ->close();
+                        }
+
                         Notification::make()
                             ->title('Module Generated Successfully!')
                             ->body($body)
                             ->success()
                             ->persistent()
-                            ->actions([
-                                \Filament\Notifications\Actions\Action::make('view_files')
-                                    ->label('View Generated Files')
-                                    ->button()
-                                    ->close()
-                            ])
+                            ->actions($notificationActions)
                             ->send();
-                            
-                        // Redirect to the new resource if Filament resource was generated
-                        if (($data['generate_filament_resource'] ?? false) && !empty($result['resource_route'])) {
-                            return redirect($result['resource_route']);
-                        }
                         
                         // Reset form for next generation
                         $this->form->fill([]);
@@ -160,6 +144,11 @@ class CreateModuleGenerator extends CreateRecord
                     }
                 }),
         ];
+    }
+
+    protected function hasCreateFormButton(): bool
+    {
+        return false;
     }
 
     protected function validateConfiguration(array &$data): void
@@ -223,14 +212,9 @@ class CreateModuleGenerator extends CreateRecord
     public function create(bool $another = false): void
     {
         // Override the default create behavior since we're not actually creating a record
-        // The generation is handled by the action above
+        // The generation is handled by the form actions
         
-        // Show notification that save doesn't create records here
-        Notification::make()
-            ->title('Configuration Saved')
-            ->body('Your module configuration has been saved. Use the "Generate Module" button to create the module.')
-            ->success()
-            ->send();
+        // Do nothing - the Generate Module button handles the actual generation
     }
 
     protected function getRedirectUrl(): string

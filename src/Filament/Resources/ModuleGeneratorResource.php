@@ -38,9 +38,13 @@ class ModuleGeneratorResource extends Resource
                                         ->label('Module Name')
                                         ->required()
                                         ->live(onBlur: true)
-                                        ->afterStateUpdated(function ($state, callable $set) {
-                                            $set('table_name', Str::snake(Str::plural($state)));
+                                        ->afterStateUpdated(function ($state, callable $set, callable $get) {
                                             $set('model_name', Str::studly($state));
+                                            
+                                            // Only set table_name if we're creating a new table
+                                            if (($get('table_creation_mode') ?? 'create_new') === 'create_new') {
+                                                $set('table_name', Str::snake(Str::plural($state)));
+                                            }
                                         })
                                         ->helperText('This will be used as the model name (e.g., Product, Customer)')
                                         ->placeholder('Product'),
@@ -51,22 +55,6 @@ class ModuleGeneratorResource extends Resource
                                         ->helperText('Auto-generated from module name but can be modified')
                                         ->placeholder('Product'),
 
-                                    Forms\Components\TextInput::make('table_name')
-                                        ->label('Database Table Name')
-                                        ->required()
-                                        ->helperText('Auto-generated from module name but can be modified')
-                                        ->placeholder('products'),
-
-                                    Forms\Components\Textarea::make('description')
-                                        ->label('Module Description')
-                                        ->placeholder('Brief description of what this module does')
-                                        ->columnSpanFull(),
-                                ])
-                                ->columns(2),
-
-                            Forms\Components\Wizard\Step::make('Database Schema')
-                                ->description('Define the database structure for your module')
-                                ->schema([
                                     Forms\Components\Select::make('table_creation_mode')
                                         ->label('Table Creation Mode')
                                         ->options([
@@ -78,8 +66,14 @@ class ModuleGeneratorResource extends Resource
                                         ->afterStateUpdated(function ($state, callable $set, callable $get) {
                                             // Clear existing table selection when switching modes
                                             $set('existing_table_name', null);
+                                            $set('table_name', null);
 
                                             if ($state === 'create_new') {
+                                                // Auto-generate table name from module name if available
+                                                $moduleName = $get('module_name');
+                                                if ($moduleName) {
+                                                    $set('table_name', Str::snake(Str::plural($moduleName)));
+                                                }
                                                 // Reset to default columns for new table
                                                 $set('columns', [
                                                     ['column_name' => 'name', 'column_type' => 'string', 'is_nullable' => false, 'is_unique' => false, 'is_indexed' => false],
@@ -91,6 +85,13 @@ class ModuleGeneratorResource extends Resource
                                             }
                                         })
                                         ->required(),
+
+                                    Forms\Components\TextInput::make('table_name')
+                                        ->label('Database Table Name')
+                                        ->required()
+                                        ->helperText('Auto-generated from module name but can be modified')
+                                        ->placeholder('products')
+                                        ->visible(fn(callable $get) => ($get('table_creation_mode') ?? 'create_new') === 'create_new'),
 
                                     Forms\Components\Select::make('existing_table_name')
                                         ->label('Select Existing Table')
@@ -110,6 +111,8 @@ class ModuleGeneratorResource extends Resource
                                         ->visible(fn(callable $get) => $get('table_creation_mode') === 'use_existing')
                                         ->afterStateUpdated(function ($state, callable $set, callable $get) {
                                             if (!empty($state)) {
+                                                // Set the table name to the selected existing table
+                                                $set('table_name', $state);
                                                 // Clear columns first, then load new ones
                                                 $set('columns', []);
                                                 static::loadExistingTableColumns($state, $set);
@@ -117,7 +120,19 @@ class ModuleGeneratorResource extends Resource
                                                 // Clear columns if no table selected
                                                 $set('columns', []);
                                             }
-                                        }),
+                                        })
+                                        ->required(fn(callable $get) => $get('table_creation_mode') === 'use_existing'),
+
+                                    Forms\Components\Textarea::make('description')
+                                        ->label('Module Description')
+                                        ->placeholder('Brief description of what this module does')
+                                        ->columnSpanFull(),
+                                ])
+                                ->columns(2),
+
+                            Forms\Components\Wizard\Step::make('Database Schema')
+                                ->description('Define the database structure for your module')
+                                ->schema([
 
                                     Forms\Components\Repeater::make('columns')
                                         ->label('Database Columns')
@@ -307,7 +322,7 @@ class ModuleGeneratorResource extends Resource
                                                                     try {
                                                                         $formData = $livewire->form->getRawState();
                                                                         $columns = $formData['columns'] ?? [];
-                                                                        
+
                                                                         return collect($columns)
                                                                             ->filter(fn($col) => is_array($col) && !empty($col['column_name']))
                                                                             ->pluck('column_name', 'column_name')
@@ -327,11 +342,11 @@ class ModuleGeneratorResource extends Resource
                                                                         $formData = $livewire->form->getRawState();
                                                                         $columns = $formData['columns'] ?? [];
                                                                         $selectedColumn = collect($columns)->firstWhere('column_name', $state);
-                                                                        
+
                                                                         if ($selectedColumn && isset($selectedColumn['column_type'])) {
                                                                             $inputType = static::guessInputTypeFromColumn($selectedColumn);
                                                                             $set('input_type', $inputType);
-                                                                            
+
                                                                             // Set as required if column is not nullable
                                                                             $isRequired = !($selectedColumn['is_nullable'] ?? false);
                                                                             $set('is_required', $isRequired);
@@ -387,7 +402,7 @@ class ModuleGeneratorResource extends Resource
                                                                     try {
                                                                         $formData = $livewire->form->getRawState();
                                                                         $columns = $formData['columns'] ?? [];
-                                                                        
+
                                                                         return collect($columns)
                                                                             ->filter(fn($col) => is_array($col) && !empty($col['column_name']))
                                                                             ->pluck('column_name', 'column_name')
@@ -405,16 +420,16 @@ class ModuleGeneratorResource extends Resource
                                                                 if (!empty($state)) {
                                                                     try {
                                                                         // Try different paths to find columns data
-                                                                        $columns = $get('../../../../columns') ?? 
-                                                                                  $get('../../../columns') ?? 
-                                                                                  $get('../../columns') ?? [];
+                                                                        $columns = $get('../../../../columns') ??
+                                                                            $get('../../../columns') ??
+                                                                            $get('../../columns') ?? [];
                                                                         $selectedColumn = collect($columns)->firstWhere('column_name', $state);
-                                                                        
+
                                                                         if ($selectedColumn && ($selectedColumn['column_type'] ?? '') === 'foreignId') {
                                                                             // Auto-populate relationship fields for foreign keys
                                                                             $relationName = Str::singular(str_replace('_id', '', $state));
                                                                             $modelName = Str::studly($relationName);
-                                                                            
+
                                                                             $set('relation_name', $relationName);
                                                                             $set('relation_model', $modelName);
                                                                             $set('relation_attribute', 'name');
@@ -460,14 +475,14 @@ class ModuleGeneratorResource extends Resource
                                                                     // Get all model files from app/Models directory
                                                                     $modelPath = app_path('Models');
                                                                     if (!is_dir($modelPath)) return [];
-                                                                    
+
                                                                     $models = collect(scandir($modelPath))
                                                                         ->filter(fn($file) => str_ends_with($file, '.php'))
                                                                         ->map(fn($file) => basename($file, '.php'))
                                                                         ->filter(fn($model) => $model !== '.' && $model !== '..')
                                                                         ->mapWithKeys(fn($model) => [$model => $model])
                                                                         ->toArray();
-                                                                    
+
                                                                     return $models;
                                                                 } catch (\Exception $e) {
                                                                     return [];
@@ -486,19 +501,19 @@ class ModuleGeneratorResource extends Resource
                                                                 try {
                                                                     $columnName = $get('column');
                                                                     if (empty($columnName)) return false;
-                                                                    
+
                                                                     // Try different paths to find columns data
-                                                                    $columns = $get('../../../../columns') ?? 
-                                                                              $get('../../../columns') ?? 
-                                                                              $get('../../columns') ?? [];
-                                                                    
+                                                                    $columns = $get('../../../../columns') ??
+                                                                        $get('../../../columns') ??
+                                                                        $get('../../columns') ?? [];
+
                                                                     if (empty($columns)) return false;
-                                                                    
+
                                                                     $selectedColumn = collect($columns)->firstWhere('column_name', $columnName);
-                                                                    
+
                                                                     // Check if we found the column and its type
                                                                     $isForeignId = $selectedColumn && ($selectedColumn['column_type'] ?? '') === 'foreignId';
-                                                                    
+
                                                                     return $isForeignId;
                                                                 } catch (\Exception $e) {
                                                                     return false;
@@ -514,22 +529,22 @@ class ModuleGeneratorResource extends Resource
                                                                     if (empty($modelName)) {
                                                                         return ['name' => 'name (default)', 'title' => 'title', 'email' => 'email'];
                                                                     }
-                                                                    
+
                                                                     // Try to get columns from the related model's table
                                                                     $modelClass = "App\\Models\\{$modelName}";
                                                                     if (!class_exists($modelClass)) {
                                                                         return ['name' => 'name (default)', 'title' => 'title', 'email' => 'email'];
                                                                     }
-                                                                    
+
                                                                     $model = new $modelClass();
                                                                     $tableName = $model->getTable();
-                                                                    
+
                                                                     $columns = collect(DB::select("DESCRIBE {$tableName}"))
                                                                         ->pluck('Field')
                                                                         ->reject(fn($col) => in_array($col, ['id', 'created_at', 'updated_at', 'deleted_at']))
                                                                         ->mapWithKeys(fn($col) => [$col => $col])
                                                                         ->toArray();
-                                                                    
+
                                                                     return empty($columns) ? ['name' => 'name (default)'] : $columns;
                                                                 } catch (\Exception $e) {
                                                                     return ['name' => 'name (default)', 'title' => 'title', 'email' => 'email'];
@@ -542,19 +557,19 @@ class ModuleGeneratorResource extends Resource
                                                                 try {
                                                                     $columnName = $get('column');
                                                                     if (empty($columnName)) return false;
-                                                                    
+
                                                                     // Try different paths to find columns data
-                                                                    $columns = $get('../../../../columns') ?? 
-                                                                              $get('../../../columns') ?? 
-                                                                              $get('../../columns') ?? [];
-                                                                    
+                                                                    $columns = $get('../../../../columns') ??
+                                                                        $get('../../../columns') ??
+                                                                        $get('../../columns') ?? [];
+
                                                                     if (empty($columns)) return false;
-                                                                    
+
                                                                     $selectedColumn = collect($columns)->firstWhere('column_name', $columnName);
-                                                                    
+
                                                                     // Check if we found the column and its type
                                                                     $isForeignId = $selectedColumn && ($selectedColumn['column_type'] ?? '') === 'foreignId';
-                                                                    
+
                                                                     return $isForeignId;
                                                                 } catch (\Exception $e) {
                                                                     return false;
@@ -578,6 +593,43 @@ class ModuleGeneratorResource extends Resource
                             Forms\Components\Wizard\Step::make('Additional Options')
                                 ->description('Extra features and configurations')
                                 ->schema([
+                                    Forms\Components\Select::make('target_panel')
+                                        ->label('Target Panel')
+                                        ->helperText('Select which Filament panel to generate the resource for')
+                                        ->options(function () {
+                                            try {
+                                                // Try to get registered panels from Filament
+                                                if (function_exists('filament')) {
+                                                    $filamentPanels = collect(\Filament\Facades\Filament::getPanels())
+                                                        ->mapWithKeys(fn($panel, $id) => [$id => ucfirst($id)])
+                                                        ->toArray();
+
+                                                    if (!empty($filamentPanels)) {
+                                                        return $filamentPanels;
+                                                    }
+                                                }
+
+                                                // Fallback to common panel options
+                                                return [
+                                                    'admin' => 'Admin',
+                                                    'app' => 'App',
+                                                    'user' => 'User',
+                                                    'customer' => 'Customer',
+                                                ];
+                                            } catch (\Exception $e) {
+                                                // Fallback options if panel detection fails
+                                                return [
+                                                    'admin' => 'Admin',
+                                                    'app' => 'App',
+                                                    'user' => 'User',
+                                                    'customer' => 'Customer',
+                                                ];
+                                            }
+                                        })
+                                        ->default('admin')
+                                        ->required()
+                                        ->searchable(),
+
                                     Forms\Components\Toggle::make('run_migration')
                                         ->label('Run Migration After Generation')
                                         ->default(false)
@@ -747,7 +799,7 @@ class ModuleGeneratorResource extends Resource
     private static function guessInputTypeFromColumn(array $column): string
     {
         $columnType = $column['column_type'] ?? '';
-        
+
         return match ($columnType) {
             'text', 'longText' => 'textarea',
             'boolean' => 'toggle',

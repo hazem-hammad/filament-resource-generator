@@ -6,15 +6,28 @@ use Illuminate\Support\Str;
 
 class FilamentResourceGenerator
 {
+    /**
+     * Get the namespace path for a panel
+     */
+    protected function getPanelNamespace(string $panelId): string
+    {
+        return match ($panelId) {
+            'admin' => 'Admin',
+            'app' => 'App',
+            'user' => 'User',
+            'customer' => 'Customer',
+            default => Str::studly($panelId)
+        };
+    }
     public function generate(array $config): array
     {
         $files = [];
-        
+
         $files['Resource'] = $this->generateResource($config);
         $files['ListPage'] = $this->generateListPage($config);
         $files['CreatePage'] = $this->generateCreatePage($config);
         $files['EditPage'] = $this->generateEditPage($config);
-        
+
         if (in_array('view', $config['resource_pages'] ?? [])) {
             $files['ViewPage'] = $this->generateViewPage($config);
         }
@@ -29,25 +42,39 @@ class FilamentResourceGenerator
         $navigationLabel = $config['navigation_label'] ?? Str::plural($modelName);
         $navigationGroup = $config['navigation_group'] ?? 'Resources';
         $navigationSort = $config['navigation_sort'] ?? 1;
+
+        // Get target panel (default to 'admin' if not specified)
+        $targetPanel = $config['target_panel'] ?? 'admin';
         
         // Generate form schema
         $formSchema = $this->generateFormSchema($config);
-        
+
         // Generate table columns
         $tableColumns = $this->generateTableColumns($config);
-        
+
         // Generate table actions
         $tableActions = $this->generateTableActions($config);
-        
+
         // Generate bulk actions
         $bulkActions = $this->generateBulkActions($config);
-        
+
         // Generate pages array
         $pages = $this->generatePagesArray($config);
 
+        // For admin panel, use the configured path from AdminPanelProvider
+        if ($targetPanel === 'admin') {
+            $namespace = "App\\Filament\\Resources";
+            $pagesNamespace = "App\\Filament\\Resources\\{$modelName}Resource\\Pages";
+        } else {
+            // For other panels, use panel-specific namespaces
+            $panelNamespace = $this->getPanelNamespace($targetPanel);
+            $namespace = "App\\Filament\\{$panelNamespace}\\Resources";
+            $pagesNamespace = "App\\Filament\\{$panelNamespace}\\Resources\\{$modelName}Resource\\Pages";
+        }
+
         return "<?php
 
-namespace App\\Filament\\Resources;
+namespace {$namespace};
 
 use App\\Models\\{$modelName};
 use Filament\\Forms;
@@ -55,7 +82,7 @@ use Filament\\Forms\\Form;
 use Filament\\Resources\\Resource;
 use Filament\\Tables;
 use Filament\\Tables\\Table;
-use App\\Filament\\Resources\\{$modelName}Resource\\Pages;
+use {$pagesNamespace};
 use Illuminate\\Database\\Eloquent\\Builder;
 use Illuminate\\Database\\Eloquent\\SoftDeletingScope;
 
@@ -120,7 +147,7 @@ class {$modelName}Resource extends Resource
     {
         $formFields = $config['form_fields'] ?? [];
         $columns = $config['columns'] ?? [];
-        
+
         // If no form fields configured, use all columns
         if (empty($formFields)) {
             $formFields = collect($columns)
@@ -135,7 +162,7 @@ class {$modelName}Resource extends Resource
         }
 
         $schema = [];
-        
+
         foreach ($formFields as $field) {
             $schema[] = $this->generateFormField($field, $config);
         }
@@ -187,7 +214,7 @@ class {$modelName}Resource extends Resource
     {
         $tableColumns = $config['table_columns'] ?? [];
         $columns = $config['columns'] ?? [];
-        
+
         // If no table columns configured, use first few columns
         if (empty($tableColumns)) {
             $tableColumns = collect($columns)
@@ -203,7 +230,7 @@ class {$modelName}Resource extends Resource
         }
 
         $schema = [];
-        
+
         foreach ($tableColumns as $column) {
             $schema[] = $this->generateTableColumn($column);
         }
@@ -257,17 +284,17 @@ class {$modelName}Resource extends Resource
     protected function generateTableActions(array $config): string
     {
         $actions = $config['table_actions'] ?? ['edit', 'delete'];
-        
+
         $actionComponents = [];
-        
+
         if (in_array('view', $actions)) {
             $actionComponents[] = "                Tables\\Actions\\ViewAction::make()";
         }
-        
+
         if (in_array('edit', $actions)) {
             $actionComponents[] = "                Tables\\Actions\\EditAction::make()";
         }
-        
+
         if (in_array('delete', $actions)) {
             $actionComponents[] = "                Tables\\Actions\\DeleteAction::make()";
         }
@@ -278,9 +305,9 @@ class {$modelName}Resource extends Resource
     protected function generateBulkActions(array $config): string
     {
         $actions = $config['table_actions'] ?? ['bulk_delete'];
-        
+
         $bulkActions = [];
-        
+
         if (in_array('bulk_delete', $actions)) {
             $bulkActions[] = "                    Tables\\Actions\\DeleteBulkAction::make()";
         }
@@ -296,21 +323,21 @@ class {$modelName}Resource extends Resource
     {
         $pages = $config['resource_pages'] ?? ['list', 'create', 'edit'];
         $modelName = $config['model_name'];
-        
+
         $pageEntries = [];
-        
+
         if (in_array('list', $pages)) {
             $pageEntries[] = "            'index' => Pages\\List{$modelName}s::route('/')";
         }
-        
+
         if (in_array('create', $pages)) {
             $pageEntries[] = "            'create' => Pages\\Create{$modelName}::route('/create')";
         }
-        
+
         if (in_array('edit', $pages)) {
             $pageEntries[] = "            'edit' => Pages\\Edit{$modelName}::route('/{record}/edit')";
         }
-        
+
         if (in_array('view', $pages)) {
             $pageEntries[] = "            'view' => Pages\\View{$modelName}::route('/{record}')";
         }
@@ -321,12 +348,24 @@ class {$modelName}Resource extends Resource
     protected function generateListPage(array $config): string
     {
         $modelName = $config['model_name'];
+        $targetPanel = $config['target_panel'] ?? 'admin';
+        
+        // For admin panel, use the configured path from AdminPanelProvider
+        if ($targetPanel === 'admin') {
+            $namespace = "App\\Filament\\Resources\\{$modelName}Resource\\Pages";
+            $resourceNamespace = "App\\Filament\\Resources\\{$modelName}Resource";
+        } else {
+            // For other panels, use panel-specific namespaces
+            $panelNamespace = $this->getPanelNamespace($targetPanel);
+            $namespace = "App\\Filament\\{$panelNamespace}\\Resources\\{$modelName}Resource\\Pages";
+            $resourceNamespace = "App\\Filament\\{$panelNamespace}\\Resources\\{$modelName}Resource";
+        }
 
         return "<?php
 
-namespace App\\Filament\\Resources\\{$modelName}Resource\\Pages;
+namespace {$namespace};
 
-use App\\Filament\\Resources\\{$modelName}Resource;
+use {$resourceNamespace};
 use Filament\\Actions;
 use Filament\\Resources\\Pages\\ListRecords;
 
@@ -346,12 +385,24 @@ class List{$modelName}s extends ListRecords
     protected function generateCreatePage(array $config): string
     {
         $modelName = $config['model_name'];
+        $targetPanel = $config['target_panel'] ?? 'admin';
+        
+        // For admin panel, use the configured path from AdminPanelProvider
+        if ($targetPanel === 'admin') {
+            $namespace = "App\\Filament\\Resources\\{$modelName}Resource\\Pages";
+            $resourceNamespace = "App\\Filament\\Resources\\{$modelName}Resource";
+        } else {
+            // For other panels, use panel-specific namespaces
+            $panelNamespace = $this->getPanelNamespace($targetPanel);
+            $namespace = "App\\Filament\\{$panelNamespace}\\Resources\\{$modelName}Resource\\Pages";
+            $resourceNamespace = "App\\Filament\\{$panelNamespace}\\Resources\\{$modelName}Resource";
+        }
 
         return "<?php
 
-namespace App\\Filament\\Resources\\{$modelName}Resource\\Pages;
+namespace {$namespace};
 
-use App\\Filament\\Resources\\{$modelName}Resource;
+use {$resourceNamespace};
 use Filament\\Resources\\Pages\\CreateRecord;
 
 class Create{$modelName} extends CreateRecord
@@ -363,12 +414,24 @@ class Create{$modelName} extends CreateRecord
     protected function generateEditPage(array $config): string
     {
         $modelName = $config['model_name'];
+        $targetPanel = $config['target_panel'] ?? 'admin';
+        
+        // For admin panel, use the configured path from AdminPanelProvider
+        if ($targetPanel === 'admin') {
+            $namespace = "App\\Filament\\Resources\\{$modelName}Resource\\Pages";
+            $resourceNamespace = "App\\Filament\\Resources\\{$modelName}Resource";
+        } else {
+            // For other panels, use panel-specific namespaces
+            $panelNamespace = $this->getPanelNamespace($targetPanel);
+            $namespace = "App\\Filament\\{$panelNamespace}\\Resources\\{$modelName}Resource\\Pages";
+            $resourceNamespace = "App\\Filament\\{$panelNamespace}\\Resources\\{$modelName}Resource";
+        }
 
         return "<?php
 
-namespace App\\Filament\\Resources\\{$modelName}Resource\\Pages;
+namespace {$namespace};
 
-use App\\Filament\\Resources\\{$modelName}Resource;
+use {$resourceNamespace};
 use Filament\\Actions;
 use Filament\\Resources\\Pages\\EditRecord;
 
@@ -388,12 +451,24 @@ class Edit{$modelName} extends EditRecord
     protected function generateViewPage(array $config): string
     {
         $modelName = $config['model_name'];
+        $targetPanel = $config['target_panel'] ?? 'admin';
+        
+        // For admin panel, use the configured path from AdminPanelProvider
+        if ($targetPanel === 'admin') {
+            $namespace = "App\\Filament\\Resources\\{$modelName}Resource\\Pages";
+            $resourceNamespace = "App\\Filament\\Resources\\{$modelName}Resource";
+        } else {
+            // For other panels, use panel-specific namespaces
+            $panelNamespace = $this->getPanelNamespace($targetPanel);
+            $namespace = "App\\Filament\\{$panelNamespace}\\Resources\\{$modelName}Resource\\Pages";
+            $resourceNamespace = "App\\Filament\\{$panelNamespace}\\Resources\\{$modelName}Resource";
+        }
 
         return "<?php
 
-namespace App\\Filament\\Resources\\{$modelName}Resource\\Pages;
+namespace {$namespace};
 
-use App\\Filament\\Resources\\{$modelName}Resource;
+use {$resourceNamespace};
 use Filament\\Actions;
 use Filament\\Resources\\Pages\\ViewRecord;
 
@@ -415,7 +490,7 @@ class View{$modelName} extends ViewRecord
         if (!isset($column['column_type'])) {
             return 'text';
         }
-        
+
         return match ($column['column_type']) {
             'text', 'longText' => 'textarea',
             'boolean' => 'toggle',
@@ -433,7 +508,7 @@ class View{$modelName} extends ViewRecord
         if (!isset($column['column_type'])) {
             return 'text';
         }
-        
+
         return match ($column['column_type']) {
             'boolean' => 'boolean',
             'enum' => 'badge',
@@ -452,7 +527,7 @@ class View{$modelName} extends ViewRecord
         if ($isForeignKey && $foreignTable) {
             // Generate a select with relationship
             $foreignModelName = Str::studly(Str::singular($foreignTable));
-            
+
             return "Forms\\Components\\Select::make('{$column}')
                             ->relationship(name: '" . Str::singular(str_replace('_id', '', $column)) . "', titleAttribute: 'name')
                             ->searchable()
@@ -461,7 +536,7 @@ class View{$modelName} extends ViewRecord
                                 Forms\\Components\\TextInput::make('name')->required(),
                             ])";
         }
-        
+
         // Regular select with empty options
         return "Forms\\Components\\Select::make('{$column}')
                             ->options([])";

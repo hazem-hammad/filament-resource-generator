@@ -12,6 +12,20 @@ class ModuleGeneratorService
 {
     protected array $generators = [];
 
+    /**
+     * Get the namespace path for a panel
+     */
+    protected function getPanelNamespace(string $panelId): string
+    {
+        return match ($panelId) {
+            'admin' => 'Admin',
+            'app' => 'App', 
+            'user' => 'User',
+            'customer' => 'Customer',
+            default => Str::studly($panelId)
+        };
+    }
+
     public function __construct()
     {
         $this->generators = [
@@ -26,7 +40,6 @@ class ModuleGeneratorService
         $result = [
             'files' => [],
             'directories' => [],
-            'resource_route' => null,
         ];
 
         try {
@@ -102,29 +115,6 @@ class ModuleGeneratorService
         return $result;
     }
 
-    public function previewModule(array $config): array
-    {
-        $config = $this->normalizeConfig($config);
-        
-        $preview = [];
-
-        // Preview model
-        $preview['Model'] = $this->generators['model']->generate($config);
-
-        // Preview migration only for new tables
-        if (($config['table_creation_mode'] ?? 'create_new') === 'create_new') {
-            $preview['Migration'] = $this->generators['migration']->generate($config);
-        }
-
-        // Preview Filament resource if requested
-        if ($config['generate_filament_resource'] ?? false) {
-            $filamentFiles = $this->generators['filament']->generate($config);
-            $preview = array_merge($preview, $filamentFiles);
-        }
-
-
-        return $preview;
-    }
 
     protected function normalizeConfig(array $config): array
     {
@@ -165,8 +155,18 @@ class ModuleGeneratorService
         }
 
         if ($config['generate_filament_resource'] ?? false) {
-            $directories[] = app_path("Filament/Resources");
-            $directories[] = app_path("Filament/Resources/{$config['model_name']}Resource/Pages");
+            $targetPanel = $config['target_panel'] ?? 'admin';
+            
+            // For admin panel, use the configured path from AdminPanelProvider
+            if ($targetPanel === 'admin') {
+                $directories[] = app_path("Filament/Resources");
+                $directories[] = app_path("Filament/Resources/{$config['model_name']}Resource/Pages");
+            } else {
+                // For other panels, use panel-specific directories
+                $panelNamespace = $this->getPanelNamespace($targetPanel);
+                $directories[] = app_path("Filament/{$panelNamespace}/Resources");
+                $directories[] = app_path("Filament/{$panelNamespace}/Resources/{$config['model_name']}Resource/Pages");
+            }
         }
 
         foreach ($directories as $directory) {
@@ -205,9 +205,6 @@ class ModuleGeneratorService
             File::put($path, $content);
             $result['files'][] = $path;
         }
-
-        // Set resource route for redirect
-        $result['resource_route'] = '/admin/' . Str::kebab(Str::plural($config['model_name']));
     }
 
 
@@ -232,15 +229,30 @@ class ModuleGeneratorService
     protected function getFilamentPath(string $filename, array $config): string
     {
         $modelName = $config['model_name'];
+        $targetPanel = $config['target_panel'] ?? 'admin';
         
-        return match ($filename) {
-            'Resource' => app_path("Filament/Resources/{$modelName}Resource.php"),
-            'ListPage' => app_path("Filament/Resources/{$modelName}Resource/Pages/List{$modelName}s.php"),
-            'CreatePage' => app_path("Filament/Resources/{$modelName}Resource/Pages/Create{$modelName}.php"),
-            'EditPage' => app_path("Filament/Resources/{$modelName}Resource/Pages/Edit{$modelName}.php"),
-            'ViewPage' => app_path("Filament/Resources/{$modelName}Resource/Pages/View{$modelName}.php"),
-            default => app_path("Filament/Resources/{$filename}.php"),
-        };
+        // For admin panel, use the configured path from AdminPanelProvider
+        if ($targetPanel === 'admin') {
+            return match ($filename) {
+                'Resource' => app_path("Filament/Resources/{$modelName}Resource.php"),
+                'ListPage' => app_path("Filament/Resources/{$modelName}Resource/Pages/List{$modelName}s.php"),
+                'CreatePage' => app_path("Filament/Resources/{$modelName}Resource/Pages/Create{$modelName}.php"),
+                'EditPage' => app_path("Filament/Resources/{$modelName}Resource/Pages/Edit{$modelName}.php"),
+                'ViewPage' => app_path("Filament/Resources/{$modelName}Resource/Pages/View{$modelName}.php"),
+                default => app_path("Filament/Resources/{$filename}.php"),
+            };
+        } else {
+            // For other panels, use panel-specific directories
+            $panelNamespace = $this->getPanelNamespace($targetPanel);
+            return match ($filename) {
+                'Resource' => app_path("Filament/{$panelNamespace}/Resources/{$modelName}Resource.php"),
+                'ListPage' => app_path("Filament/{$panelNamespace}/Resources/{$modelName}Resource/Pages/List{$modelName}s.php"),
+                'CreatePage' => app_path("Filament/{$panelNamespace}/Resources/{$modelName}Resource/Pages/Create{$modelName}.php"),
+                'EditPage' => app_path("Filament/{$panelNamespace}/Resources/{$modelName}Resource/Pages/Edit{$modelName}.php"),
+                'ViewPage' => app_path("Filament/{$panelNamespace}/Resources/{$modelName}Resource/Pages/View{$modelName}.php"),
+                default => app_path("Filament/{$panelNamespace}/Resources/{$filename}.php"),
+            };
+        }
     }
 
 
