@@ -24,22 +24,20 @@ You can install the package via Composer:
 composer require intcore/filament-resource-generator:^1.0
 ```
 
-### Manual Registration (Optional)
+### Plugin Registration
 
-If the Module Generator doesn't appear automatically in your Filament admin panel, you can manually register it in your `AdminPanelProvider`:
+Register the plugin in your `AdminPanelProvider`:
 
 ```php
 // app/Providers/Filament/AdminPanelProvider.php
 
-use Intcore\FilamentResourceGenerator\Filament\Resources\ModuleGeneratorResource;
+use Intcore\FilamentResourceGenerator\ResourceGenerator;
 
 public function panel(Panel $panel): Panel
 {
     return $panel
         // ... other configuration
-        ->resources([
-            ModuleGeneratorResource::class,
-        ]);
+        ->plugin(ResourceGenerator::make());
 }
 ```
 

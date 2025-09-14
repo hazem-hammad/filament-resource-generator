@@ -12,10 +12,14 @@
 - **Location**: `src/Filament/Resources/ModuleGeneratorResource.php`
 - **Type**: Filament Resource with custom wizard form for module generation
 
+### Plugin Class
+- **Class**: `Intcore\FilamentResourceGenerator\ResourceGenerator`
+- **Location**: `src/ResourceGenerator.php`
+- **Type**: Filament Plugin that automatically registers the resource
+
 ### Service Provider
 - **Class**: `Intcore\FilamentResourceGenerator\ModuleGeneratorServiceProvider`
-- **Registration**: Manual registration required in AdminPanelProvider
-- **No automatic resource registration** - users must manually add to their panel
+- **Registration**: Plugin-based registration in AdminPanelProvider
 
 ### Installation & Setup
 
@@ -24,14 +28,12 @@
 composer require intcore/filament-resource-generator:^1.0
 ```
 
-#### Manual Registration Required
+#### Plugin Registration Required
 Users must add to their `AdminPanelProvider`:
 ```php
-use Intcore\FilamentResourceGenerator\Filament\Resources\ModuleGeneratorResource;
+use Intcore\FilamentResourceGenerator\ResourceGenerator;
 
-->resources([
-    ModuleGeneratorResource::class,
-])
+->plugin(ResourceGenerator::make())
 ```
 
 ## Package Structure
@@ -53,6 +55,7 @@ src/
 │       └── FilamentResourceGenerator.php
 ├── Commands/
 │   └── InstallModuleGeneratorCommand.php
+├── ResourceGenerator.php (Plugin class)
 └── ModuleGeneratorServiceProvider.php
 ```
 
@@ -86,11 +89,11 @@ src/
 - v1.0.9-v1.0.10: README updates for proper installation instructions
 - v1.0.11: Removed automatic registration, requires manual setup
 
-### Current State (v1.0.11)
+### Current State (v1.1.0 - Plugin Version)
 - ✅ Package installs successfully via Composer
-- ✅ No automatic registration - users must manually add to AdminPanelProvider
+- ✅ Plugin-based registration with ResourceGenerator::make()
 - ✅ Uses ModuleGeneratorResource class (not the simplified page)
-- ✅ README provides clear manual registration instructions
+- ✅ README provides clear plugin registration instructions
 - ✅ No migrations required (empty getMigrations array)
 
 ### Testing Commands
@@ -105,7 +108,7 @@ php artisan config:clear
 ```
 
 ## Important Notes for Future Development
-1. Resource registration is intentionally manual for better compatibility
+1. Resource registration is now plugin-based for better compatibility and easier setup
 2. No database migrations are included in this package
 3. The package generates files for other modules but doesn't modify its own database
-4. Users must follow manual registration steps in README for the resource to appear
+4. Users must follow plugin registration steps in README for the resource to appear
