@@ -41,18 +41,6 @@ public function panel(Panel $panel): Panel
 }
 ```
 
-You can publish the config file with:
-
-```bash
-php artisan vendor:publish --tag="filament-resource-generator-config"
-```
-
-Or install everything at once:
-
-```bash
-php artisan module-generator:install
-```
-
 ## Usage
 
 1. **Access the Module Generator**: Navigate to your Filament admin panel and look for "Module Generator" in the navigation menu.
