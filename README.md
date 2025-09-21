@@ -86,23 +86,6 @@ The package generates:
 - **Filament Resource**: `app/Filament/Resources/PostResource.php`
 - **Resource Pages**: Create, Edit, List pages
 
-## Configuration
-
-You can customize the package behavior by editing `config/filament-resource-generator.php`:
-
-```php
-return [
-    'model_path' => 'app/Models',
-    'migration_path' => 'database/migrations',
-    'factory_path' => 'database/factories',
-    'seeder_path' => 'database/seeders',
-    'resource_path' => 'app/Filament/Resources',
-    'namespace_prefix' => 'App',
-    'auto_run_migrations' => false,
-    'auto_run_seeders' => false,
-];
-```
-
 ## Advanced Features
 
 ### Foreign Key Relationships
